@@ -15,9 +15,10 @@ const (
 )
 
 var (
-	ErrServeNoExist = errors.New("serve no exist")                // ErrServeNoExist 服务不存在
-	ErrServeStoped  = errors.New("the service has been disabled") // ErrServeStoped 服务已停止
-	ErrAuthority    = errors.New("authority error")               // ErrAuthority 授权失败
+	ErrServeNoExist = errors.New("serve no exist")                //  服务不存在
+	ErrServeStoped  = errors.New("the service has been disabled") //  服务已停止
+	ErrAuthority    = errors.New("authority error")               //  授权失败
+	ErrParameter    = errors.New("parameter error")               //  参数错误
 )
 
 
