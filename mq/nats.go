@@ -13,6 +13,7 @@ const (
 )
 
 type NatsClient struct {
+	url     string
 	Conn    *nats.Conn
 	pubs    chan interface{}
 	onlysub bool
@@ -29,7 +30,7 @@ type NatsMsgRspHandler func([]byte) []byte
 
 func (n *NatsClient) checkNetStatus() error {
 	if n.Conn == nil || n.Conn.IsClosed() {
-		nc, err := nats.Connect(nats.DefaultURL)
+		nc, err := nats.Connect(n.url)
 		if err != nil {
 			return err
 		}
@@ -41,6 +42,7 @@ func (n *NatsClient) checkNetStatus() error {
 // NewNatsClient nats connect
 func NewNatsClient(url string, onlysub bool) (*NatsClient, error) {
 	cli := &NatsClient{}
+	cli.url = url
 	nc, err := nats.Connect(url)
 	if err != nil {
 		return cli, err
