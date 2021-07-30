@@ -53,14 +53,24 @@ func (resp *Context) SetCode(code Status) *Context {
 
 // WriteTo 输出json到客户端
 func (resp *Context) WriteTo(c *gin.Context) {
-	resp.WriteData(gin.H{}, c)
+	resp.WriteData(nil, c)
+}
+
+type response struct {
+	Status struct {
+		Code int    `json:"code"`
+		Msg  string `json:"message"`
+	} `json:"status"`
+	Data interface{} `json:"data"`
 }
 
 // WriteData 输出json到客户端
-func (resp *Context) WriteData(h gin.H, c *gin.Context) {
-	h["code"] = resp.code
-	h["msg"] = resp.msg
-	c.JSON(http.StatusOK, h)
+func (ctx *Context) WriteData(data interface{}, c *gin.Context) {
+	res := &response{}
+	res.Status.Code = int(ctx.code)
+	res.Status.Msg = ctx.msg
+	res.Data = data
+	c.JSON(http.StatusOK, res)
 }
 
 // JSONWriteError 错误应答
