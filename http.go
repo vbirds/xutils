@@ -14,9 +14,11 @@ const (
 	contentType = "application/json;charset=utf8"
 )
 
-type HttpResult struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
+type response struct {
+	Status struct {
+		Code int    `json:"code"`
+		Msg  string `json:"message"`
+	} `json:"status"`
 	Data interface{} `json:"data"`
 }
 
@@ -36,18 +38,18 @@ func HttpPost(url string, requset interface{}, result interface{}) error {
 	if err != nil {
 		return err
 	}
-	var res HttpResult
+	var res response
 	if err := jsoniter.Unmarshal(content, &res); err != nil {
 		return err
 	}
-	if res.Code != 200 {
-		return errors.New(res.Msg)
+	if res.Status.Code != 200 {
+		return errors.New(res.Status.Msg)
 	}
 	jsoniter.Get(content, "data").ToVal(result)
 	return nil
 }
 
-// httpPost http post 请求
+// HttpGet http get 请求
 func HttpGet(url string, result interface{}) error {
 	recv, err := http.Get(url)
 	if err != nil {
@@ -58,12 +60,12 @@ func HttpGet(url string, result interface{}) error {
 	if err != nil {
 		return err
 	}
-	var res HttpResult
+	var res response
 	if err := jsoniter.Unmarshal(content, &res); err != nil {
 		return err
 	}
-	if res.Code != 200 {
-		return errors.New(res.Msg)
+	if res.Status.Code != 200 {
+		return errors.New(res.Status.Msg)
 	}
 	jsoniter.Get(content, "data").ToVal(result)
 	return nil
