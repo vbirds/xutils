@@ -61,7 +61,7 @@ type response struct {
 		Code int    `json:"code"`
 		Msg  string `json:"message"`
 	} `json:"status"`
-	Data interface{} `json:"data"`
+	Data interface{} `json:"data,omitempty"`
 }
 
 // WriteData 输出json到客户端
@@ -89,10 +89,10 @@ func JSONOk() *Context {
 }
 
 // ParamInt int参数
-func ParamInt(c *gin.Context, key string) (uint64, error) {
+func ParamInt(c *gin.Context, key string) (int64, error) {
 	idstr := c.Param(key)
 	id, err := strconv.Atoi(idstr)
-	return uint64(id), err
+	return int64(id), err
 }
 
 // ParamString string
@@ -101,8 +101,8 @@ func ParamString(c *gin.Context, key string) string {
 }
 
 // QueryInt int参数
-func QueryInt(c *gin.Context, key string) (uint64, error) {
+func QueryInt(c *gin.Context, key string) (int64, error) {
 	idstr := c.Query(key)
 	id, err := strconv.Atoi(idstr)
-	return uint64(id), err
+	return int64(id), err
 }

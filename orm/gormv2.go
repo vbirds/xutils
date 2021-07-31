@@ -38,10 +38,10 @@ func DB() *gorm.DB {
 }
 
 // DbCount 数目
-func DbCount(model, where interface{}) uint64 {
+func DbCount(model, where interface{}) int64 {
 	var count int64
 	_db.Model(model).Where(where).Count(&count)
-	return uint64(count)
+	return count
 }
 
 // DbCreate 创建
@@ -121,7 +121,7 @@ func DbFirstBy(out interface{}, where string, args ...interface{}) (err error) {
 }
 
 // DbFirstById 查找
-func DbFirstById(id uint64, out interface{}) error {
+func DbFirstById(out interface{}, id int64) error {
 	return _db.First(out, id).Error
 }
 
@@ -154,23 +154,23 @@ type dbPage struct {
 }
 
 // Find 分页
-func (o *dbPage) Find(pageIndex, pageSize uint64, out interface{}, conds ...interface{}) (int64, error) {
+func (o *dbPage) Find(pageIndex, pageSize int, out interface{}, conds ...interface{}) (int64, error) {
 	if o.TotalCount <= 0 {
 		return 0, nil
 	}
 	if pageSize > 0 {
-		return o.TotalCount, o.Db.Offset(int((pageIndex-1)*pageSize)).Limit(int(pageSize)).Find(out, conds...).Error
+		return o.TotalCount, o.Db.Offset((pageIndex-1)*pageSize).Limit(int(pageSize)).Find(out, conds...).Error
 	}
 	return o.TotalCount, o.Db.Find(out, conds...).Error
 }
 
 // Find 分页
-func (o *dbPage) Scan(pageIndex, pageSize uint64, out interface{}) (int64, error) {
+func (o *dbPage) Scan(pageIndex, pageSize int, out interface{}) (int64, error) {
 	if o.TotalCount <= 0 {
 		return 0, nil
 	}
 	if pageSize > 0 {
-		return o.TotalCount, o.Db.Offset(int((pageIndex - 1) * pageSize)).Limit(int(pageSize)).Scan(out).Error
+		return o.TotalCount, o.Db.Offset((pageIndex - 1) * pageSize).Limit(int(pageSize)).Scan(out).Error
 	}
 	return o.TotalCount, o.Db.Scan(out).Error
 }
