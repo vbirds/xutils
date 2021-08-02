@@ -121,7 +121,7 @@ func DbFirstBy(out interface{}, where string, args ...interface{}) (err error) {
 }
 
 // DbFirstById 查找
-func DbFirstById(out interface{}, id int64) error {
+func DbFirstById(out interface{}, id uint64) error {
 	return _db.First(out, id).Error
 }
 

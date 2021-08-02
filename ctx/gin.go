@@ -89,10 +89,10 @@ func JSONOk() *Context {
 }
 
 // ParamInt int参数
-func ParamInt(c *gin.Context, key string) (int64, error) {
+func ParamInt(c *gin.Context, key string) (uint64, error) {
 	idstr := c.Param(key)
 	id, err := strconv.Atoi(idstr)
-	return int64(id), err
+	return uint64(id), err
 }
 
 // ParamString string
