@@ -74,6 +74,10 @@ func DbUpdateColById(model, id interface{}, column string, value interface{}) er
 	return _db.Model(model).Where("id = ?", id).Update(column, value).Error
 }
 
+func DbUpdateColBy(model interface{}, column string, value interface{}, where string, args ...interface{}) error {
+	return _db.Model(model).Where(where, args...).Update(column, value).Error
+}
+
 // DbUpdateColsById 更新多列
 // 用于0不更新
 func DbUpdateColsById(model, id interface{}, value H) error {
