@@ -45,7 +45,9 @@ func HttpPost(url string, requset interface{}, result interface{}) error {
 	if res.Status.Code != 200 {
 		return errors.New(res.Status.Msg)
 	}
-	jsoniter.Get(content, "data").ToVal(result)
+	if result != nil {
+		jsoniter.Get(content, "data").ToVal(result)
+	}
 	return nil
 }
 
