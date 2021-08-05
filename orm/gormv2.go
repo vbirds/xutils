@@ -40,7 +40,11 @@ func DB() *gorm.DB {
 // DbCount 数目
 func DbCount(model, where interface{}) int64 {
 	var count int64
-	_db.Model(model).Where(where).Count(&count)
+	db := _db.Model(model)
+	if where != nil {
+		db = db.Where(where)
+	}
+	db.Count(&count)
 	return count
 }
 
