@@ -57,20 +57,25 @@ func (resp *Context) WriteTo(c *gin.Context) {
 }
 
 type response struct {
-	Status struct {
-		Code int    `json:"code"`
-		Msg  string `json:"message"`
-	} `json:"status"`
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
 	Data interface{} `json:"data,omitempty"`
 }
 
 // WriteData 输出json到客户端
 func (ctx *Context) WriteData(data interface{}, c *gin.Context) {
 	res := &response{}
-	res.Status.Code = int(ctx.code)
-	res.Status.Msg = ctx.msg
+	res.Code = int(ctx.code)
+	res.Msg = ctx.msg
 	res.Data = data
 	c.JSON(http.StatusOK, res)
+}
+
+// WriteData 输出json到客户端
+func (ctx *Context) Write(data gin.H, c *gin.Context) {
+	data["code"] = ctx.code
+	data["msg"] = ctx.msg
+	c.JSON(http.StatusOK, data)
 }
 
 // JSONWriteError 错误应答
