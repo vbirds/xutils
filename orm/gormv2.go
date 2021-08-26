@@ -83,10 +83,10 @@ func DbUpdateColBy(model interface{}, column string, value interface{}, where st
 }
 
 // DbUpdateColsById 更新多列
-// 用于0不更新
-func DbUpdateColsById(model, id interface{}, value H) error {
-	return _db.Model(model).Where("id = ?", id).Updates(value).Error
-}
+// 用于0不更新 fix
+// func DbUpdateColsById(model, id interface{}, value H) error {
+// 	return _db.Model(model).Where("id = ?", id).Updates(value).Error
+// }
 
 // DbUpdateColsBy 更新多列
 // 用于0不更新
@@ -98,6 +98,14 @@ func DbUpdateColsBy(model interface{}, value H, where string, args ...interface{
 // ids id数组
 func DbUpdateByIds(model, ids interface{}, value H) error {
 	return _db.Model(model).Where("id in (?)", ids).Updates(value).Error
+}
+
+// 自定义字段，用于0不更新
+func DbUpdateSelect(model interface{}, args ...string) error {
+	f := func(args []string) error {
+		return _db.Model(model).Select(args).Updates(model).Error
+	}
+	return f(args)
 }
 
 // DbDeletes 批量删除
