@@ -1,26 +1,11 @@
 package rpc
 
 import (
-	"errors"
 	"time"
 )
 
 // 和中心服务通信
 // func name <Register>
-
-const (
-	ServeStatusIdel     = iota // 空闲
-	ServeStatusOk              // 正常
-	ServeStatusDisabled        // 禁止
-)
-
-var (
-	ErrServeNoExist = errors.New("serve no exist")                //  服务不存在
-	ErrServeStoped  = errors.New("the service has been disabled") //  服务已停止
-	ErrAuthority    = errors.New("authority error")               //  授权失败
-	ErrParameter    = errors.New("parameter error")               //  参数错误
-)
-
 
 // KeepAliveArgs 保活
 type KeepAliveArgs struct {
