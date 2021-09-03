@@ -53,7 +53,7 @@ const (
 	aeskey = "nlasfl2wrwfsnsfs131#$%fs"
 )
 
-type Licences struct {
+type License struct {
 	Address       string    // 发布证书服务地址
 	ServeGuid     string    // 服务唯一Id
 	ServeName     string    // 服务名称
@@ -62,8 +62,8 @@ type Licences struct {
 	EffectiveTime int       // 有效时长
 }
 
-// WriteLicences 写入文件
-func CreateLicences(fileName string, l *Licences) error {
+// LicenseWrite 写入文件
+func LicenseWrite(fileName string, l *License) error {
 	data, err := json.Marshal(l)
 	if err != nil {
 		return err
@@ -82,7 +82,8 @@ func CreateLicences(fileName string, l *Licences) error {
 	return nil
 }
 
-func ReadLicences(filename string) (*Licences, error) {
+// LicenseRead 读
+func LicenseRead(filename string) (*License, error) {
 	fp, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -96,7 +97,7 @@ func ReadLicences(filename string) (*Licences, error) {
 	if err != nil {
 		return nil, err
 	}
-	var lice Licences
+	var lice License
 	json.Unmarshal(tpass, &lice)
 	return &lice, nil
 }

@@ -8,8 +8,8 @@ import (
 	"os"
 )
 
-// LoadJSONConf 初始化配置参数
-func LoadJSONConf(jsonFile string, obj interface{}) {
+// JSONConf 初始化配置参数
+func JSONConf(jsonFile string, obj interface{}) {
 	jsonFp, err := os.Open(jsonFile)
 	if err != nil {
 		fmt.Println("load error" + jsonFile)

@@ -8,8 +8,8 @@ import (
 
 var publicIPAddr string = ""
 
-// PublicIPAddr 公网IP
-func PublicIPAddr() string {
+// HostPublicAddr 公网IP
+func HostPublicAddr() string {
 	if publicIPAddr != "" {
 		return publicIPAddr
 	}
@@ -25,8 +25,8 @@ func PublicIPAddr() string {
 
 var localIPAddr string = ""
 
-// LocalIPAddr 本地IP
-func LocalIPAddr() string {
+// HostLocalAddr 本地IP
+func HostLocalAddr() string {
 	if localIPAddr != "" {
 		return localIPAddr
 	}
