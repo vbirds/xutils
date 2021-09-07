@@ -102,10 +102,12 @@ func DbUpdateByIds(model, ids interface{}, value H) error {
 
 // 自定义字段，用于0不更新
 func DbUpdateSelect(model interface{}, args ...string) error {
-	f := func(args []string) error {
-		return _db.Model(model).Select(args).Updates(model).Error
-	}
-	return f(args)
+	return DbUpdates(model, args)
+}
+
+// 自定义字段，用于0不更新
+func DbUpdates(model interface{}, args []string) error {
+	return _db.Model(model).Select(args).Updates(model).Error
 }
 
 // DbDeletes 批量删除
