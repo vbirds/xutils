@@ -1,6 +1,10 @@
 package orm
 
-import "gorm.io/gorm"
+import (
+	"reflect"
+
+	"gorm.io/gorm"
+)
 
 var _db *gorm.DB
 
@@ -229,4 +233,28 @@ func DbPage(model interface{}, where *DbWhere) *dbPage {
 		totalCount = 0
 	}
 	return &dbPage{Db: db, TotalCount: totalCount}
+}
+
+// DbPageRawScan obj必须是数组类型
+func DbPageRawScan(query string, obj interface{}, pageIndex, pageSize int) (int64, error) {
+	s := reflect.ValueOf(obj)
+	if s.Kind() == reflect.Ptr {
+		s = s.Elem()
+	}
+	switch s.Kind() {
+	case reflect.Slice, reflect.Array:
+	default:
+		return 0, nil
+	}
+	if err := _db.Raw(query).Scan(obj).Error; err != nil {
+		return 0, err
+	}
+	total := s.Len()
+	start := pageSize * (pageIndex - 1)
+	end := start + pageSize
+	if end >= total {
+		end = total
+	}
+	s.Set(s.Slice(start, end))
+	return int64(total), nil
 }
