@@ -106,8 +106,14 @@ func ParamString(c *gin.Context, key string) string {
 }
 
 // QueryInt int参数
-func QueryInt(c *gin.Context, key string) (int64, error) {
+func QueryInt(c *gin.Context, key string) (int, error) {
+	idstr := c.Query(key)
+	return strconv.Atoi(idstr)
+}
+
+// QueryUInt64 int参数
+func QueryUInt64(c *gin.Context, key string) (uint64, error) {
 	idstr := c.Query(key)
 	id, err := strconv.Atoi(idstr)
-	return int64(id), err
+	return uint64(id), err
 }
