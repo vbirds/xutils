@@ -8,28 +8,8 @@ import (
 
 var _db *gorm.DB
 
-// whereValues 分页条件
-type whereValues struct {
-	Where string
-	Value []interface{}
-}
-
-// ModelWhere 分页条件
-type DbWhere struct {
-	Wheres []whereValues
-	Orders []string
-}
-
 // H 多列处理
 type H map[string]interface{}
-
-// Append  添加条件
-func (p *DbWhere) Append(where string, value ...interface{}) {
-	var w whereValues
-	w.Where = where
-	w.Value = value
-	p.Wheres = append(p.Wheres, w)
-}
 
 // SetDB gorm对象
 func SetDB(db *gorm.DB) {
