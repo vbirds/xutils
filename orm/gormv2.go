@@ -171,37 +171,37 @@ func DbFindBy(out interface{}, where string, args ...interface{}) (int64, error)
 
 // DbPage 分页
 type dbPage struct {
-	Db         *gorm.DB
-	TotalCount int64
+	db    *gorm.DB
+	total int64
 }
 
 // Find 分页
-func (o *dbPage) Find(pageIndex, pageSize int, out interface{}, conds ...interface{}) (int64, error) {
-	if o.TotalCount <= 0 {
+func (o *dbPage) Find(page, size int, out interface{}, conds ...interface{}) (int64, error) {
+	if o.total <= 0 {
 		return 0, nil
 	}
-	if pageSize > 0 {
-		return o.TotalCount, o.Db.Offset((pageIndex-1)*pageSize).Limit(int(pageSize)).Find(out, conds...).Error
+	if page > 0 {
+		return o.total, o.db.Offset((page-1)*size).Limit(size).Find(out, conds...).Error
 	}
-	return o.TotalCount, o.Db.Find(out, conds...).Error
+	return o.total, o.db.Find(out, conds...).Error
 }
 
 // Find 分页
-func (o *dbPage) Scan(pageIndex, pageSize int, out interface{}) (int64, error) {
-	if o.TotalCount <= 0 {
+func (o *dbPage) Scan(page, size int, out interface{}) (int64, error) {
+	if o.total <= 0 {
 		return 0, nil
 	}
-	if pageSize > 0 {
-		return o.TotalCount, o.Db.Offset((pageIndex - 1) * pageSize).Limit(int(pageSize)).Scan(out).Error
+	if page > 0 {
+		return o.total, o.db.Offset((page - 1) * size).Limit(size).Scan(out).Error
 	}
-	return o.TotalCount, o.Db.Scan(out).Error
+	return o.total, o.db.Scan(out).Error
 }
 
 // Preload 关联加载
 func (o *dbPage) Preload(preloads ...string) *dbPage {
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
-			o.Db.Preload(preload)
+			o.db = o.db.Preload(preload)
 		}
 	}
 	return o
@@ -209,7 +209,7 @@ func (o *dbPage) Preload(preloads ...string) *dbPage {
 
 // Joins join
 func (o *dbPage) Joins(query string, args ...interface{}) *dbPage {
-	o.Db = o.Db.Joins(query, args...)
+	o.db = o.db.Joins(query, args...)
 	return o
 }
 
@@ -228,15 +228,15 @@ func DbPage(model interface{}, where *DbWhere) *dbPage {
 			}
 		}
 	}
-	var totalCount int64
-	if db.Count(&totalCount).Error != nil {
-		totalCount = 0
+	var total int64
+	if db.Count(&total).Error != nil {
+		total = 0
 	}
-	return &dbPage{Db: db, TotalCount: totalCount}
+	return &dbPage{db: db, total: total}
 }
 
 // DbPageRawScan obj必须是数组类型
-func DbPageRawScan(query string, obj interface{}, pageIndex, pageSize int) (int64, error) {
+func DbPageRawScan(query string, obj interface{}, page, size int) (int64, error) {
 	s := reflect.ValueOf(obj)
 	if s.Kind() == reflect.Ptr {
 		s = s.Elem()
@@ -250,8 +250,8 @@ func DbPageRawScan(query string, obj interface{}, pageIndex, pageSize int) (int6
 		return 0, err
 	}
 	total := s.Len()
-	start := pageSize * (pageIndex - 1)
-	end := start + pageSize
+	start := size * (page - 1)
+	end := start + size
 	if end >= total {
 		end = total
 	}
