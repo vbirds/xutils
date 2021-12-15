@@ -88,6 +88,11 @@ func DbUpdateSelect(model interface{}, args ...string) error {
 	return DbUpdates(model, args)
 }
 
+// 自定义字段，用于0不更新
+func DbUpdateSelectWhere(model interface{}, fields []string, where string, args ...interface{}) error {
+	return _db.Model(model).Select(fields).Where(where, args...).Updates(model).Error
+}
+
 // DbUpdateByIds 批量更新
 // ids id数组
 func DbUpdateByIds(model interface{}, ids []int, value map[string]interface{}) error {
