@@ -1,44 +1,28 @@
 package file
 
 import (
+	"bytes"
 	"encoding/binary"
 	"io"
 )
 
 var (
-	hwFlag string = "hwmedia"
+	cacheFlag []byte = []byte("hwmedia")
 )
 
-type HwHeader struct {
-	FrameType    uint16
-	FrameChannel uint16
-	Timestamp    uint64
-	Length       int
+func cacheEncode(length int) []byte {
+	var data [11]byte
+	copy(data[:7], cacheFlag)
+	binary.LittleEndian.PutUint32(data[7:], uint32(length))
+	return data[:]
 }
 
-func hwEncode(channel, ctype uint16, timestamp uint64, length int) []byte {
-	var data [23]byte
-	copy(data[:7], hwFlag)
-	binary.LittleEndian.PutUint32(data[7:], uint32(length)+12)
-	binary.LittleEndian.PutUint16(data[11:], ctype)
-	binary.LittleEndian.PutUint16(data[13:], channel)
-	binary.LittleEndian.PutUint64(data[15:], timestamp)
-	return data[:23]
-}
-
-func hwDecode(r io.Reader) (h *HwHeader) {
-	var buf [23]byte
+func cacheDecode(r io.Reader) int {
+	var buf [11]byte
 	reclen, err := r.Read(buf[:])
-	if reclen != 23 || err != nil {
-		return nil
-	}
-	if string(buf[:]) != hwFlag {
-		return nil
+	if err != nil || reclen != 11 || bytes.Compare(buf[7:], cacheFlag) == 0 {
+		return -1
 	}
 	length := binary.LittleEndian.Uint32(buf[7:])
-	h.Length = int(length) - 12
-	h.FrameType = binary.LittleEndian.Uint16(buf[11:])
-	h.FrameChannel = binary.LittleEndian.Uint16(buf[13:])
-	h.Timestamp = binary.LittleEndian.Uint64(buf[15:])
-	return
+	return int(length)
 }

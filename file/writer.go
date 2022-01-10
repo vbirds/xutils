@@ -13,26 +13,40 @@ func unix2Str(timestamp int64, layout string, offset int) string {
 	return timeStr
 }
 
-type HwWriter struct {
+type CacheWriter struct {
 	root          string
 	files         [13]*os.File
 	deviceNo      string
 	lastTimestamp uint64
+	filename      string
+	channel       uint16
 }
 
-func NewHwWriter(path, deviceNo string) *HwWriter {
-	return &HwWriter{
+func NewCacheWriter(path, deviceNo string) *CacheWriter {
+	return &CacheWriter{
 		root:          path,
 		deviceNo:      deviceNo,
 		lastTimestamp: 0,
+		filename:      "",
 	}
 }
 
-func (c *HwWriter) Ok() bool {
+func NewCache(filename string) *CacheWriter {
+	return &CacheWriter{
+		lastTimestamp: 0,
+		filename:      filename,
+	}
+}
+
+func (c *CacheWriter) Ok() bool {
 	return c.lastTimestamp > 0
 }
 
-func (c *HwWriter) Close() (files []string) {
+func (c *CacheWriter) Close() (files []string) {
+	if c.filename != "" {
+		c.files[c.channel].Close()
+		return
+	}
 	tstamp := int64(c.lastTimestamp / 1000 / 1000)
 	dtStr := unix2Str(tstamp, "20060102 150405", 0)
 	timeStr := dtStr[9:]
@@ -52,12 +66,16 @@ func (c *HwWriter) Close() (files []string) {
 	return
 }
 
-func (c *HwWriter) createFile(channel uint16, timestamp uint64) error {
+func (c *CacheWriter) createFile(channel uint16, timestamp uint64) error {
 	tstamp := int64(timestamp / 1000 / 1000)
 	dtStr := unix2Str(tstamp, "20060102 150405", 0)
 	dateStr := dtStr[:8]
 	timeStr := dtStr[9:]
 	fpName := fmt.Sprintf("%s/%s/%s/ch%02d_%s_%s", c.root, c.deviceNo, dateStr, channel, dateStr, timeStr)
+	if c.filename != "" {
+		fpName = c.filename
+		c.channel = channel
+	}
 	dir := filepath.Dir(fpName)
 	os.MkdirAll(dir, os.ModePerm)
 	fp, err := os.OpenFile(fpName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
@@ -68,14 +86,14 @@ func (c *HwWriter) createFile(channel uint16, timestamp uint64) error {
 	return nil
 }
 
-func (c *HwWriter) WriteFrame(channel, ctype uint16, timestamp uint64, data []byte) error {
+func (c *CacheWriter) WriteFrame(channel, ctype uint16, timestamp uint64, data []byte) error {
 	file := c.files[channel]
 	if file == nil {
 		if err := c.createFile(channel, timestamp); err != nil {
 			return err
 		}
 	}
-	res := hwEncode(channel, ctype, timestamp, len(data))
+	res := cacheEncode(len(data))
 	file.Write(res)
 	file.Write(data)
 	c.lastTimestamp = timestamp
