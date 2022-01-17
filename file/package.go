@@ -20,7 +20,7 @@ func cacheEncode(length int) []byte {
 func cacheDecode(r io.Reader) int {
 	var buf [11]byte
 	reclen, err := r.Read(buf[:])
-	if err != nil || reclen != 11 || bytes.Compare(buf[7:], cacheFlag) == 0 {
+	if err != nil || reclen != 11 || !bytes.Equal(buf[:7], cacheFlag) {
 		return -1
 	}
 	length := binary.LittleEndian.Uint32(buf[7:])

@@ -35,14 +35,22 @@ func (c *Cache) Seek(offset uint64) {
 	c.status = kStatusSeek
 }
 
-func (c *Cache) StartPlay(handler func([]byte) error) {
+func (c *Cache) StartPlay(handler func([]byte) error) error {
 	if c.reader == nil {
-		return
+		return Error_Player
 	}
-	var lstFrameStamp uint64 = 0
+	var (
+		lstFrameStamp uint64 = 0
+		lstSendTime   time.Time
+	)
 	defer c.reader.Close()
+	var err error = nil
 	for {
 		if c.status == kStatusPause {
+			if time.Since(lstSendTime).Seconds() > 10 {
+				err = Error_TimeOut
+				break
+			}
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -51,6 +59,7 @@ func (c *Cache) StartPlay(handler func([]byte) error) {
 		}
 		h, frame, length := c.reader.ReadFrame(8)
 		if length == 0 {
+			err = Error_Frame
 			break
 		}
 		// seek
@@ -69,18 +78,22 @@ func (c *Cache) StartPlay(handler func([]byte) error) {
 			}
 			lstFrameStamp = h.Timestamp
 		}
+		// fmt.Printf("FrameType %d Channel %d Timestamp %v length %d bufferLength %d\n", h.FrameType, h.Channel, h.Timestamp, length, len(frame))
 		// 封装头
 		frame[0] = 'H'
-		frame[1] = '1'
+		frame[1] = 1
 		binary.LittleEndian.PutUint16(frame[2:], 1000)
 		binary.LittleEndian.PutUint32(frame[4:], uint32(length))
 		if err := handler(frame); err != nil {
-			break
+			return err
 		}
+		lstSendTime = time.Now()
 	}
 	var emptybytes [8]byte
 	emptybytes[0] = 'H'
-	emptybytes[1] = '1'
+	emptybytes[1] = 1
 	binary.LittleEndian.PutUint16(emptybytes[2:], 1000)
 	handler(emptybytes[:])
+	// log.Printf("play %s closed\n", c.reader.FileName())
+	return err
 }
