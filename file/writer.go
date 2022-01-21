@@ -71,7 +71,7 @@ func (c *CacheWriter) createFile(channel uint16, timestamp uint64) error {
 	dtStr := unix2Str(tstamp, "20060102 150405", 0)
 	dateStr := dtStr[:8]
 	timeStr := dtStr[9:]
-	fpName := fmt.Sprintf("%s/%s/%s/ch%02d_%s_%s", c.root, c.deviceNo, dateStr, channel, dateStr, timeStr)
+	fpName := fmt.Sprintf("%s/%s/%s/ch%02d_%s_%s", c.root, dateStr, c.deviceNo, channel, dateStr, timeStr)
 	if c.filename != "" {
 		fpName = c.filename
 		c.channel = channel
