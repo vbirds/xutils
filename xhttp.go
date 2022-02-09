@@ -16,9 +16,9 @@ const (
 )
 
 type response struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"message"`
-	Data interface{} `json:"data"`
+	Status int         `json:"status"`
+	Msg    string      `json:"msg"`
+	Data   interface{} `json:"data"`
 }
 
 // httpPost http post 请求
@@ -41,7 +41,7 @@ func HttpPost(url string, requset interface{}, result interface{}) error {
 	if err := jsoniter.Unmarshal(content, &res); err != nil {
 		return err
 	}
-	if res.Code != 200 {
+	if res.Status != 10000 {
 		return errors.New(res.Msg)
 	}
 	if result != nil {
@@ -65,10 +65,12 @@ func HttpGet(url string, result interface{}) error {
 	if err := jsoniter.Unmarshal(content, &res); err != nil {
 		return err
 	}
-	if res.Code != 200 {
+	if res.Status != 10000 {
 		return errors.New(res.Msg)
 	}
-	jsoniter.Get(content, "data").ToVal(result)
+	if result != nil {
+		jsoniter.Get(content, "data").ToVal(result)
+	}
 	return nil
 }
 
