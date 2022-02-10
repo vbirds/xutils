@@ -49,7 +49,7 @@ func (c *xPlayer) Stop() {
 }
 
 func (c *xPlayer) Seek(offset uint64) {
-	c.offset = offset
+	c.offset = offset * 1000 * 1000
 	c.status = kStatusSeek
 }
 
@@ -58,8 +58,9 @@ func (c *xPlayer) StartPlay(handler func([]byte) error) error {
 		return Error_Player
 	}
 	var (
-		lstFrameStamp uint64 = 0
-		lstSendTime   time.Time
+		fstFrameStamp uint64    = 0
+		lstFrameStamp uint64    = 0
+		lstSendTime   time.Time = time.Now()
 	)
 	defer c.reader.Close()
 	var err error = nil
@@ -80,12 +81,17 @@ func (c *xPlayer) StartPlay(handler func([]byte) error) error {
 			err = Error_Frame
 			break
 		}
+		if fstFrameStamp == 0 {
+			if h.FrameType != 1 {
+				continue // 等待i帧
+			}
+			fstFrameStamp = h.Timestamp
+		}
 		// seek
 		if c.status == kStatusSeek {
-			if h.FrameType != 1 || h.Timestamp-lstFrameStamp < c.offset*1000 {
+			if h.FrameType != 1 || h.Timestamp-fstFrameStamp < c.offset {
 				continue
 			}
-			lstFrameStamp = 0
 			c.status = kStatusPlay
 		}
 		// 按时间播放

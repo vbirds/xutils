@@ -41,7 +41,7 @@ type CacheReader struct {
 	file   *os.File
 }
 
-func NewCacheReader(filename string) *CacheReader {
+func NewCacheReader(filename string) Reader {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil
