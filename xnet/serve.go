@@ -54,15 +54,15 @@ func (s *Serve) newConnection(conn net.Conn) {
 	if err != nil || recvlen == 0 {
 		return
 	}
-	r, err := httpRequest(data, conn)
-	if err == nil {
-		w := makeHttpWriter(conn.(*net.TCPConn))
-		http.DefaultServeMux.ServeHTTP(w, r)
+	if !bytes.Equal(data[:3], []byte("GET")) && !bytes.Equal(data[:4], []byte("POST")) {
+		err = s.Handler(conn, data[:recvlen])
+		fmt.Printf("%s connection closed. %v\n", clientAddr, err)
 		return
 	}
-	fmt.Printf("%s connection success.", clientAddr)
-	err = s.Handler(conn, data[:recvlen])
-	fmt.Printf("%s connection closed. %v\n", clientAddr, err)
+	if r, err := httpRequest(data, conn); err == nil {
+		w := makeHttpWriter(conn.(*net.TCPConn))
+		http.DefaultServeMux.ServeHTTP(w, r)
+	}
 }
 
 func (s *Serve) ListenAndServe() error {
