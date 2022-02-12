@@ -5,7 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+
+	"gopkg.in/yaml.v2"
 )
 
 // JSONConf 初始化配置参数
@@ -29,4 +32,12 @@ func JSONConf(jsonFile string, obj interface{}) {
 		fmt.Println("json error " + jsonFile)
 		os.Exit(0)
 	}
+}
+
+func YMLConf(fpname string, obj interface{}) error {
+	yfile, err := ioutil.ReadFile(fpname)
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(yfile, obj)
 }
