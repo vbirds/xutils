@@ -154,36 +154,30 @@ func DbFindBy(out interface{}, where string, args ...interface{}) (int64, error)
 	return db.RowsAffected, db.Error
 }
 
-// DbPage 分页
-type dbPage struct {
+type dbByWhere struct {
 	db    *gorm.DB
 	total int64
 }
 
-// Find 分页
-func (o *dbPage) Find(page, size int, out interface{}, conds ...interface{}) (int64, error) {
-	if o.total <= 0 {
+func (o *dbByWhere) Find(out interface{}, conds ...interface{}) (int64, error) {
+	if o.total < 1 {
 		return 0, nil
-	}
-	if page > 0 {
-		return o.total, o.db.Offset((page-1)*size).Limit(size).Find(out, conds...).Error
 	}
 	return o.total, o.db.Find(out, conds...).Error
 }
 
-// Find 分页
-func (o *dbPage) Scan(page, size int, out interface{}) (int64, error) {
-	if o.total <= 0 {
+func (o *dbByWhere) Scan(out interface{}) (int64, error) {
+	if o.total < 1 {
 		return 0, nil
-	}
-	if page > 0 {
-		return o.total, o.db.Offset((page - 1) * size).Limit(size).Scan(out).Error
 	}
 	return o.total, o.db.Scan(out).Error
 }
 
 // Preload 关联加载
-func (o *dbPage) Preload(preloads ...string) *dbPage {
+func (o *dbByWhere) Preload(preloads ...string) *dbByWhere {
+	if o.total < 1 {
+		return o
+	}
 	if len(preloads) > 0 {
 		for _, preload := range preloads {
 			o.db = o.db.Preload(preload)
@@ -193,31 +187,34 @@ func (o *dbPage) Preload(preloads ...string) *dbPage {
 }
 
 // Joins join
-func (o *dbPage) Joins(query string, args ...interface{}) *dbPage {
+func (o *dbByWhere) Joins(query string, args ...interface{}) *dbByWhere {
 	o.db = o.db.Joins(query, args...)
 	return o
 }
 
-// DbPage
-func DbPage(model interface{}, where *DbWhere) *dbPage {
-	db := _db.Model(model)
-	if where != nil {
-		for _, wo := range where.Wheres {
+// DbByWhere
+func DbByWhere(m interface{}, w *DbWhere) *dbByWhere {
+	db := _db.Model(m)
+	if w != nil {
+		for _, wo := range w.Wheres {
 			if wo.Where != "" {
 				db = db.Where(wo.Where, wo.Value...)
 			}
 		}
-		if len(where.Orders) > 0 {
-			for _, order := range where.Orders {
+		if len(w.Orders) > 0 {
+			for _, order := range w.Orders {
 				db = db.Order(order)
 			}
 		}
 	}
-	var total int64
-	if db.Count(&total).Error != nil {
-		total = 0
+	o := &dbByWhere{db: db}
+	if db.Count(&o.total).Error == nil {
+		// dbByWhere 分页
+		if w.Page != nil && w.Page.Num > 0 {
+			o.db = db.Offset((w.Page.Num - 1) * w.Page.Size).Limit(w.Page.Size)
+		}
 	}
-	return &dbPage{db: db, total: total}
+	return o
 }
 
 // DbPageRawScan obj必须是数组类型
