@@ -104,3 +104,21 @@ func HttpApplyAuth(url, serverId string) (*Server, error) {
 	}
 	return s, nil
 }
+
+type LogAlarmLink struct {
+	ServerID         string `json:"serverID"`
+	DeviceNo         string `json:"deviceNo"`
+	AlarmType        int    `json:"alarmType"`
+	AlarmGuid        string `json:"alarmGuid"`
+	ResStartTime     string `json:"resStartTime"`
+	ResEndTime       string `json:"resEndTime"`
+	ResRealStartTime string `json:"resRealStartTime"`
+	ResRealEndTime   string `json:"resRealEndTime"`
+	ExeStartTime     string `json:"exeStartTime"`
+	ExeEndTime       string `json:"exeEndTime"`
+	Action           int    `json:"action"`
+}
+
+func HttpPostLogAlarmLink(url string, v *LogAlarmLink) error {
+	return HttpPost(url, v, nil)
+}
