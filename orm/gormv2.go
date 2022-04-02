@@ -66,12 +66,6 @@ func DbUpdateColBy(model interface{}, column string, value interface{}, where st
 	return _db.Model(model).Where(where, args...).Update(column, value).Error
 }
 
-// DbUpdateColsById 更新多列
-// 用于0不更新 fix
-// func DbUpdateColsById(model, id interface{}, value H) error {
-// 	return _db.Model(model).Where("id = ?", id).Updates(value).Error
-// }
-
 // DbUpdateColsBy 更新多列
 // 用于0不更新
 func DbUpdateColsBy(model interface{}, value map[string]interface{}, where string, args ...interface{}) error {
@@ -79,18 +73,13 @@ func DbUpdateColsBy(model interface{}, value map[string]interface{}, where strin
 }
 
 // 自定义字段，用于0不更新
-func DbUpdates(model interface{}, args []string) error {
-	return _db.Model(model).Select(args).Updates(model).Error
+func DbUpdates(model interface{}, cols ...string) error {
+	return _db.Model(model).Select(cols).Updates(model).Error
 }
 
 // 自定义字段，用于0不更新
-func DbUpdateSelect(model interface{}, args ...string) error {
-	return DbUpdates(model, args)
-}
-
-// 自定义字段，用于0不更新
-func DbUpdateSelectWhere(model interface{}, fields []string, where string, args ...interface{}) error {
-	return _db.Model(model).Select(fields).Where(where, args...).Updates(model).Error
+func DbUpdatesBy(model interface{}, cols []string, where string, args ...interface{}) error {
+	return _db.Model(model).Select(cols).Where(where, args...).Updates(model).Error
 }
 
 // DbUpdateByIds 批量更新
