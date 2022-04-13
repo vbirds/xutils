@@ -93,11 +93,16 @@ func JSONOk() *Context {
 	return JSON(StatusOK)
 }
 
-// ParamInt int参数
-func ParamInt(c *gin.Context, key string) (uint64, error) {
+// ParamUInt uint参数
+func ParamUInt(c *gin.Context, key string) uint {
 	idstr := c.Param(key)
-	id, err := strconv.Atoi(idstr)
-	return uint64(id), err
+	id, _ := strconv.Atoi(idstr)
+	return uint(id)
+}
+
+// ParamInt int参数
+func ParamInt(c *gin.Context, key string) int {
+	return int(ParamUInt(c, key))
 }
 
 // ParamString string
@@ -109,6 +114,13 @@ func ParamString(c *gin.Context, key string) string {
 func QueryInt(c *gin.Context, key string) (int, error) {
 	idstr := c.Query(key)
 	return strconv.Atoi(idstr)
+}
+
+// QueryUInt int参数
+func QueryUInt(c *gin.Context, key string) (uint, error) {
+	idstr := c.Query(key)
+	id, err := strconv.Atoi(idstr)
+	return uint(id), err
 }
 
 // QueryUInt64 int参数
