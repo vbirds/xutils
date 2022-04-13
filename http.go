@@ -17,6 +17,7 @@ const (
 
 type response struct {
 	Status int         `json:"status"`
+	Code   int         `json:"code"`
 	Msg    string      `json:"msg"`
 	Data   interface{} `json:"data"`
 }
@@ -41,13 +42,13 @@ func HttpPost(url string, requset interface{}, result interface{}) error {
 	if err := jsoniter.Unmarshal(content, &res); err != nil {
 		return err
 	}
-	if res.Status != 10000 {
-		return errors.New(res.Msg)
+	if res.Status == 10000 || res.Code == 200 {
+		if result != nil && res.Data != nil {
+			jsoniter.Get(content, "data").ToVal(result)
+		}
+		return nil
 	}
-	if result != nil {
-		jsoniter.Get(content, "data").ToVal(result)
-	}
-	return nil
+	return errors.New(res.Msg)
 }
 
 // HttpGet http get 请求
@@ -65,13 +66,13 @@ func HttpGet(url string, result interface{}) error {
 	if err := jsoniter.Unmarshal(content, &res); err != nil {
 		return err
 	}
-	if res.Status != 10000 {
-		return errors.New(res.Msg)
+	if res.Status == 10000 || res.Code == 200 {
+		if result != nil && res.Data != nil {
+			jsoniter.Get(content, "data").ToVal(result)
+		}
+		return nil
 	}
-	if result != nil {
-		jsoniter.Get(content, "data").ToVal(result)
-	}
-	return nil
+	return errors.New(res.Msg)
 }
 
 // ServerOpt 服务配置信息
