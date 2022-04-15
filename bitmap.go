@@ -4,6 +4,7 @@ import "strconv"
 
 type BitMap struct {
 	bits []uint64
+	base int
 }
 
 // 最大数决定数组长度 65535/64 = 1024
@@ -12,6 +13,14 @@ type BitMap struct {
 func NewBitMap(n int) *BitMap {
 	return &BitMap{
 		bits: make([]uint64, n),
+		base: 0,
+	}
+}
+
+func NewBitMapWithBase(n, b int) *BitMap {
+	return &BitMap{
+		bits: make([]uint64, n),
+		base: b,
 	}
 }
 
@@ -33,7 +42,7 @@ func (b *BitMap) grow(num uint) {
 }
 
 func (b *BitMap) Set(n int) {
-	index, offset := b.index(uint(n))
+	index, offset := b.index(uint(n - b.base))
 	if index+1 > uint(len(b.bits)) {
 		b.grow(index)
 	}
@@ -41,7 +50,7 @@ func (b *BitMap) Set(n int) {
 }
 
 func (b *BitMap) Include(n int) bool {
-	index, offset := b.index(uint(n))
+	index, offset := b.index(uint(n - b.base))
 	if index+1 > uint(len(b.bits)) {
 		return false
 	}
@@ -52,7 +61,7 @@ func (b *BitMap) Include(n int) bool {
 }
 
 func (b *BitMap) Del(n int) {
-	index, offset := b.index(uint(n))
+	index, offset := b.index(uint(n - b.base))
 	if index+1 > uint(len(b.bits)) {
 		return
 	}
@@ -84,7 +93,7 @@ func (b *BitMap) All() []int {
 	for j := 0; j < len(b.bits); j++ {
 		for i := 0; i < 64; i++ {
 			if b.bits[j]&(1<<i) > 0 {
-				rs = append(rs, j*64+i)
+				rs = append(rs, j*64+i+b.base)
 			}
 		}
 	}
@@ -96,7 +105,7 @@ func (b *BitMap) String() string {
 	for j := 0; j < len(b.bits); j++ {
 		for i := 0; i < 64; i++ {
 			if b.bits[j]&(1<<i) > 0 {
-				s += strconv.Itoa(j*64 + i)
+				s += strconv.Itoa(j*64 + i + b.base)
 				s += ","
 			}
 		}
