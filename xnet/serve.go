@@ -42,8 +42,10 @@ func httpRequest(buffer []byte, conn net.Conn) (*http.Request, error) {
 }
 
 type Serve struct {
-	addr    *net.TCPAddr
-	Handler func(net.Conn, []byte) error
+	addr        *net.TCPAddr
+	listener    *net.TCPListener
+	httpMux     *http.ServeMux
+	connHandler func(net.Conn, []byte) error
 }
 
 func (s *Serve) newConnection(conn net.Conn) {
@@ -54,31 +56,45 @@ func (s *Serve) newConnection(conn net.Conn) {
 	if err != nil || recvlen == 0 {
 		return
 	}
-	if !bytes.Equal(data[:3], []byte("GET")) && !bytes.Equal(data[:4], []byte("POST")) {
-		err = s.Handler(conn, data[:recvlen])
-		fmt.Printf("%s connection closed. %v\n", clientAddr, err)
+	if bytes.Contains(data, []byte("http")) {
+		if r, err := httpRequest(data, conn); err == nil {
+			w := makeHttpWriter(conn.(*net.TCPConn))
+			s.httpMux.ServeHTTP(w, r)
+		}
 		return
 	}
-	if r, err := httpRequest(data, conn); err == nil {
-		w := makeHttpWriter(conn.(*net.TCPConn))
-		http.DefaultServeMux.ServeHTTP(w, r)
+	if s.connHandler != nil {
+		err = s.connHandler(conn, data[:recvlen])
 	}
+	fmt.Printf("%s connection closed. %v\n", clientAddr, err)
 }
 
-func (s *Serve) ListenAndServe() error {
-	listener, err := net.ListenTCP("tcp", s.addr)
+func (s *Serve) ListenAndServe() (err error) {
+	s.listener, err = net.ListenTCP("tcp", s.addr)
 	if err != nil {
 		return err
 	}
-	defer listener.Close()
+	defer s.listener.Close()
 	for {
-		conn, err := listener.Accept()
+		conn, err := s.listener.Accept()
 		if err != nil {
 			fmt.Println("Accept error: ", err)
-			continue
+			return err
 		}
 		go s.newConnection(conn)
 	}
+}
+
+func (s *Serve) Release() {
+	s.listener.Close()
+}
+
+func (s *Serve) HttpHandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+	s.httpMux.HandleFunc(pattern, handler)
+}
+
+func (s *Serve) ConnHandleFunc(handler func(net.Conn, []byte) error) {
+	s.connHandler = handler
 }
 
 func NewServe(port uint16) *Serve {
@@ -87,5 +103,5 @@ func NewServe(port uint16) *Serve {
 		fmt.Println("Listener create error: ", err)
 		return nil
 	}
-	return &Serve{addr: tcpAddr}
+	return &Serve{addr: tcpAddr, httpMux: http.NewServeMux()}
 }
