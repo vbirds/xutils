@@ -6,25 +6,25 @@ import (
 	"gorm.io/gorm"
 )
 
-var _db *gorm.DB
+var gOrmDb *gorm.DB
 
 // H 多列处理
 type H map[string]interface{}
 
 // SetDB gorm对象
 func SetDB(db *gorm.DB) {
-	_db = db
+	gOrmDb = db
 }
 
 // SetDB gorm对象
 func DB() *gorm.DB {
-	return _db
+	return gOrmDb
 }
 
 // DbCount 数目
 func DbCount(model, where interface{}) int64 {
 	var count int64
-	db := _db.Model(model)
+	db := gOrmDb.Model(model)
 	if where != nil {
 		db = db.Where(where)
 	}
@@ -34,74 +34,74 @@ func DbCount(model, where interface{}) int64 {
 
 // DbCreate 创建
 func DbCreate(model interface{}) error {
-	return _db.Create(model).Error
+	return gOrmDb.Create(model).Error
 }
 
 // DbSave 保存
 func DbSave(value interface{}) error {
-	return _db.Save(value).Error
+	return gOrmDb.Save(value).Error
 }
 
 // DbUpdateModel 更新
 func DbUpdateModel(model interface{}) error {
-	return _db.Model(model).Updates(model).Error
+	return gOrmDb.Model(model).Updates(model).Error
 }
 
 // DbUpdateModelBy 条件更新
 func DbUpdateModelBy(model interface{}, where string, args ...interface{}) error {
-	return _db.Where(where, args...).Updates(model).Error
+	return gOrmDb.Where(where, args...).Updates(model).Error
 }
 
 // DbUpdatesById 更新
 func DbUpdateById(model, id interface{}) error {
-	return _db.Where("id = ?", id).Updates(model).Error
+	return gOrmDb.Where("id = ?", id).Updates(model).Error
 }
 
 // DbUpdateColById 单列更新
 func DbUpdateColById(model, id interface{}, column string, value interface{}) error {
-	return _db.Model(model).Where("id = ?", id).Update(column, value).Error
+	return gOrmDb.Model(model).Where("id = ?", id).Update(column, value).Error
 }
 
 func DbUpdateColBy(model interface{}, column string, value interface{}, where string, args ...interface{}) error {
-	return _db.Model(model).Where(where, args...).Update(column, value).Error
+	return gOrmDb.Model(model).Where(where, args...).Update(column, value).Error
 }
 
 // DbUpdateColsBy 更新多列
 // 用于0不更新
 func DbUpdateColsBy(model interface{}, value map[string]interface{}, where string, args ...interface{}) error {
-	return _db.Model(model).Where(where, args...).Updates(value).Error
+	return gOrmDb.Model(model).Where(where, args...).Updates(value).Error
 }
 
 // 自定义字段，用于0不更新
 func DbUpdates(model interface{}, cols ...string) error {
-	return _db.Model(model).Select(cols).Updates(model).Error
+	return gOrmDb.Model(model).Select(cols).Updates(model).Error
 }
 
 // 自定义字段，用于0不更新
 func DbUpdatesBy(model interface{}, cols []string, where string, args ...interface{}) error {
-	return _db.Model(model).Select(cols).Where(where, args...).Updates(model).Error
+	return gOrmDb.Model(model).Select(cols).Where(where, args...).Updates(model).Error
 }
 
 // DbUpdateByIds 批量更新
 // ids id数组
 func DbUpdateByIds(model interface{}, ids []int, value map[string]interface{}) error {
-	return _db.Model(model).Where("id in (?)", ids).Updates(value).Error
+	return gOrmDb.Model(model).Where("id in (?)", ids).Updates(value).Error
 }
 
 // DbDeletes 批量删除
 func DbDeletes(value interface{}) error {
-	return _db.Delete(value).Error
+	return gOrmDb.Delete(value).Error
 }
 
 // DbDeleteByIds 批量删除
 // ids id数组 []
 func DbDeleteByIds(model, ids interface{}) error {
-	return _db.Delete(model, ids).Error
+	return gOrmDb.Delete(model, ids).Error
 }
 
 // DbDeleteBy 删除
 func DbDeleteBy(model interface{}, where string, args ...interface{}) (count int64, err error) {
-	db := _db.Where(where, args...).Delete(model)
+	db := gOrmDb.Where(where, args...).Delete(model)
 	err = db.Error
 	if err != nil {
 		return
@@ -112,23 +112,23 @@ func DbDeleteBy(model interface{}, where string, args ...interface{}) (count int
 
 // DbFirstBy 指定条件查找
 func DbFirstBy(out interface{}, where string, args ...interface{}) (err error) {
-	err = _db.Where(where, args...).First(out).Error
+	err = gOrmDb.Where(where, args...).First(out).Error
 	return
 }
 
 // DbFirstById 查找
 func DbFirstById(out interface{}, id uint) error {
-	return _db.First(out, id).Error
+	return gOrmDb.First(out, id).Error
 }
 
 // DbFirstWhere 查找
 func DbFirstWhere(out, where interface{}) error {
-	return _db.Where(where).First(out).Error
+	return gOrmDb.Where(where).First(out).Error
 }
 
 // DbFind 多个查找
 func DbFind(out interface{}, orders ...string) error {
-	db := _db
+	db := gOrmDb
 	if len(orders) > 0 {
 		for _, order := range orders {
 			db = db.Order(order)
@@ -139,7 +139,7 @@ func DbFind(out interface{}, orders ...string) error {
 
 // DbFindBy 多个条件查找
 func DbFindBy(out interface{}, where string, args ...interface{}) (int64, error) {
-	db := _db.Where(where, args...).Find(out)
+	db := gOrmDb.Where(where, args...).Find(out)
 	return db.RowsAffected, db.Error
 }
 
@@ -183,7 +183,7 @@ func (o *dbByWhere) Joins(query string, args ...interface{}) *dbByWhere {
 
 // DbByWhere
 func DbByWhere(m interface{}, w *DbWhere) *dbByWhere {
-	db := _db.Model(m)
+	db := gOrmDb.Model(m)
 	if w != nil {
 		for _, wo := range w.Wheres {
 			if wo.Where != "" {
@@ -217,7 +217,7 @@ func DbPageRawScan(query string, obj interface{}, page, size int) (int64, error)
 	default:
 		return 0, nil
 	}
-	if err := _db.Raw(query).Scan(obj).Error; err != nil {
+	if err := gOrmDb.Raw(query).Scan(obj).Error; err != nil {
 		return 0, err
 	}
 	total := s.Len()
