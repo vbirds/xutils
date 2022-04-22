@@ -3,7 +3,6 @@ package xutils
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -12,11 +11,10 @@ import (
 )
 
 // JSONConf 初始化配置参数
-func JSONConf(jsonFile string, obj interface{}) {
+func JSONConf(jsonFile string, obj interface{}) error {
 	jsonFp, err := os.Open(jsonFile)
 	if err != nil {
-		fmt.Println("load error" + jsonFile)
-		os.Exit(0)
+		return err
 	}
 	defer jsonFp.Close()
 	var jsString string
@@ -28,10 +26,7 @@ func JSONConf(jsonFile string, obj interface{}) {
 		}
 		jsString = jsString + tString
 	}
-	if err := json.Unmarshal([]byte(jsString), obj); err != nil {
-		fmt.Println("json error " + jsonFile)
-		os.Exit(0)
-	}
+	return json.Unmarshal([]byte(jsString), obj)
 }
 
 func YMLConf(fpname string, obj interface{}) error {
