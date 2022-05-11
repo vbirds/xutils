@@ -10,9 +10,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// JSONConf 初始化配置参数
-func JSONConf(jsonFile string, obj interface{}) error {
-	jsonFp, err := os.Open(jsonFile)
+// JSONFile 初始化配置参数
+func JSONFile(filename string, obj interface{}) error {
+	jsonFp, err := os.Open(filename)
 	if err != nil {
 		return err
 	}
@@ -29,8 +29,8 @@ func JSONConf(jsonFile string, obj interface{}) error {
 	return json.Unmarshal([]byte(jsString), obj)
 }
 
-func YMLConf(fpname string, obj interface{}) error {
-	yfile, err := ioutil.ReadFile(fpname)
+func YAMLFile(filename string, obj interface{}) error {
+	yfile, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
 	}

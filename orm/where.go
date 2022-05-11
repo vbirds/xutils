@@ -24,6 +24,9 @@ func (o *DbPage) DbWhere() *DbWhere {
 
 // Append  添加条件
 func (p *DbWhere) Append(w string, v ...interface{}) {
+	if v == nil {
+		return
+	}
 	p.Wheres = append(p.Wheres, wValue{Where: w, Value: v})
 }
 
