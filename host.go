@@ -1,3 +1,7 @@
+// Copyright 2021 xutils. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 package xutils
 
 import (
@@ -8,7 +12,7 @@ import (
 
 var publicIPAddr string = ""
 
-// HostPublicAddr 公网IP
+// HostPublicAddr public address
 func HostPublicAddr() string {
 	if publicIPAddr != "" {
 		return publicIPAddr
@@ -25,7 +29,7 @@ func HostPublicAddr() string {
 
 var localIPAddr string = ""
 
-// HostLocalAddr 本地IP
+// HostLocalAddr local address
 func HostLocalAddr() string {
 	if localIPAddr != "" {
 		return localIPAddr

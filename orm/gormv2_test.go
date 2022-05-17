@@ -1,3 +1,7 @@
+// Copyright 2021 xutils. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 package orm
 
 import (
@@ -24,7 +28,7 @@ type Dog struct {
 type Girl struct {
 	gorm.Model
 	Name string
-	Dog  []Dog 
+	Dog  []Dog
 }
 
 func init() {

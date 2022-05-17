@@ -1,3 +1,7 @@
+// Copyright 2021 xutils. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 package xnet
 
 import (
@@ -41,6 +45,7 @@ func httpRequest(buffer []byte, conn net.Conn) (*http.Request, error) {
 	return http.ReadRequest(bufio.NewReader(r))
 }
 
+// Serve
 type Serve struct {
 	addr        *net.TCPAddr
 	listener    *net.TCPListener

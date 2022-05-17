@@ -1,3 +1,7 @@
+// Copyright 2021 xutils. All rights reserved.
+// Use of this source code is governed by a MIT-style
+// license that can be found in the LICENSE file.
+
 package xutils
 
 import (
@@ -10,7 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// JSONFile 初始化配置参数
+// JSONFile load json file
 func JSONFile(filename string, obj interface{}) error {
 	jsonFp, err := os.Open(filename)
 	if err != nil {
@@ -29,6 +33,7 @@ func JSONFile(filename string, obj interface{}) error {
 	return json.Unmarshal([]byte(jsString), obj)
 }
 
+// YAMLFile load yaml file
 func YAMLFile(filename string, obj interface{}) error {
 	yfile, err := ioutil.ReadFile(filename)
 	if err != nil {
