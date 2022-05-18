@@ -34,22 +34,51 @@ func (p *DbWhere) Append(w string, v ...interface{}) {
 	p.Wheres = append(p.Wheres, wValue{Where: w, Value: v})
 }
 
-// Append  添加条件
-func (p *DbWhere) String(w, v string) {
-	if v != "" {
-		p.Append(w, v)
+// Like
+func (p *DbWhere) Like(field, v string) {
+	if v == "" {
+		return
 	}
+	p.Append(field+" like ?", v)
 }
 
-func (p *DbWhere) Int(w string, v int) {
-	if v > 0 {
-		p.Append(w, v)
+// Equal
+func (p *DbWhere) Equal(field string, v interface{}) {
+	switch v := v.(type) {
+	case int:
+		if v == 0 {
+			return
+		}
+	case string:
+		if v == "" {
+			return
+		}
+	case *int:
+		if v == nil {
+			return
+		}
+	case *string:
+		if v == nil {
+			return
+		}
+	default:
+		return
 	}
+	p.Append(field+" = ?", v)
 }
 
-// Append  添加条件
-func (p *DbWhere) Date(w string, date, e string) {
-	if date != "" {
-		p.Append(w, date+e)
+// DateRange
+func (p *DbWhere) DateRange(field string, st, et string) {
+	if st == "" || et == "" {
+		return
 	}
+	p.Append(field+" <= ? AND "+field+" >= ?", st+" 00:00:00", et+" 23:59:59")
+}
+
+// TimeRange
+func (p *DbWhere) TimeRange(field string, st, et string) {
+	if st == "" || et == "" {
+		return
+	}
+	p.Append(field+" <= ? AND "+field+" >= ?", st, et)
 }
