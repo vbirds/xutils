@@ -11,54 +11,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Status 响应状态
-type Status int
-
 var (
-	StatusFail         Status = -1  // 失败
-	StatusOK           Status = 200 // 成功
-	StatusError        Status = 500 // 错误
-	StatusLoginExpired Status = 401 // 登录过期
-	StatusForbidden    Status = 403 // 无权限
+	StatusFail         = -1  // 失败
+	StatusOK           = 200 // 成功
+	StatusError        = 500 // 错误
+	StatusLoginExpired = 401 // 登录过期
+	StatusForbidden    = 403 // 无权限
 )
-
-// Context 响应
-type Context struct {
-	msg  string
-	code Status
-}
-
-// JSON 响应
-func JSON(status Status) *Context {
-	ctx := &Context{}
-	ctx.code = status
-	switch status {
-	case StatusOK:
-		ctx.msg = "success"
-	case StatusFail:
-		ctx.msg = "failed"
-	case StatusForbidden:
-		ctx.msg = "forbidden"
-	}
-	return ctx
-}
-
-// SetMsg 设置消息体的内容
-func (resp *Context) SetMsg(msg string) *Context {
-	resp.msg = msg
-	return resp
-}
-
-// SetCode 设置消息体的编码
-func (resp *Context) SetCode(code Status) *Context {
-	resp.code = code
-	return resp
-}
-
-// WriteTo 输出json到客户端
-func (resp *Context) WriteTo(c *gin.Context) {
-	resp.WriteData(nil, c)
-}
 
 type response struct {
 	Code int         `json:"code"`
@@ -66,35 +25,74 @@ type response struct {
 	Data interface{} `json:"data,omitempty"`
 }
 
-// WriteData 输出json到客户端
-func (ctx *Context) WriteData(data interface{}, c *gin.Context) {
-	res := &response{}
-	res.Code = int(ctx.code)
-	res.Msg = ctx.msg
-	res.Data = data
-	c.JSON(http.StatusOK, res)
+// Context 响应
+type Context struct {
+	response
 }
 
-// WriteData 输出json到客户端
-func (ctx *Context) Write(data gin.H, c *gin.Context) {
-	data["code"] = ctx.code
-	data["msg"] = ctx.msg
+// JSON 响应
+func JSON(status int) *Context {
+	ctx := &Context{}
+	ctx.Code = status
+	switch status {
+	case StatusOK:
+		ctx.Msg = "success"
+	case StatusFail:
+		ctx.Msg = "failed"
+	case StatusForbidden:
+		ctx.Msg = "forbidden"
+	}
+	return ctx
+}
+
+// SetMsg 设置消息体的内容int
+func (o *Context) SetMsg(msg string) *Context {
+	o.Msg = msg
+	return o
+}
+
+// SetCode 设置消息体的编码
+func (o *Context) SetCode(code int) *Context {
+	o.Code = code
+	return o
+}
+
+// WriteData 输出json到客户端， 有data字段
+func (o *Context) WriteData(data interface{}, c *gin.Context) {
+	o.Data = data
+	c.JSON(http.StatusOK, o.response)
+}
+
+// Write 输出json到客户端, 无data字段
+func (o *Context) Write(data gin.H, c *gin.Context) {
+	data["code"] = o.Code
+	data["msg"] = o.Msg
 	c.JSON(http.StatusOK, data)
+}
+
+// JSONOk 无数据响应
+func JSONOk(c *gin.Context) {
+	JSON(StatusOK).WriteData(nil, c)
+}
+
+// JSONWriteData
+func JSONWrite(data gin.H, c *gin.Context) {
+	JSON(StatusOK).Write(data, c)
+}
+
+// JSONWriteData
+func JSONWriteData(v interface{}, c *gin.Context) {
+	JSON(StatusOK).WriteData(v, c)
+}
+
+// JSONError
+func JSONError(c *gin.Context) {
+	JSON(StatusError).WriteData(nil, c)
 }
 
 // JSONWriteError 错误应答
 func JSONWriteError(err error, c *gin.Context) {
-	JSONError().SetMsg(err.Error()).WriteTo(c)
-}
-
-// JSONError 错误
-func JSONError() *Context {
-	return JSON(StatusError)
-}
-
-// JSONOk 正确
-func JSONOk() *Context {
-	return JSON(StatusOK)
+	JSON(StatusError).SetMsg(err.Error()).WriteData(nil, c)
 }
 
 // ParamUInt uint参数
@@ -107,11 +105,6 @@ func ParamUInt(c *gin.Context, key string) uint {
 // ParamInt int参数
 func ParamInt(c *gin.Context, key string) int {
 	return int(ParamUInt(c, key))
-}
-
-// ParamString string
-func ParamString(c *gin.Context, key string) string {
-	return c.Param(key)
 }
 
 // QueryInt int参数
