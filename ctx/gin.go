@@ -75,7 +75,7 @@ func JSONOk(c *gin.Context) {
 	JSON(StatusOK).WriteData(nil, c)
 }
 
-// JSONWriteData
+// JSONWrite
 func JSONWrite(data gin.H, c *gin.Context) {
 	JSON(StatusOK).Write(data, c)
 }
