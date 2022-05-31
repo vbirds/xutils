@@ -72,7 +72,7 @@ func (p *DbWhere) DateRange(field string, st, et string) {
 	if st == "" || et == "" {
 		return
 	}
-	p.Append(field+" <= ? AND "+field+" >= ?", st+" 00:00:00", et+" 23:59:59")
+	p.Append(field+" >= ? AND "+field+" <= ?", st+" 00:00:00", et+" 23:59:59")
 }
 
 // TimeRange
@@ -80,5 +80,5 @@ func (p *DbWhere) TimeRange(field string, st, et string) {
 	if st == "" || et == "" {
 		return
 	}
-	p.Append(field+" <= ? AND "+field+" >= ?", st, et)
+	p.Append(field+" >= ? AND "+field+" <= ?", st, et)
 }
