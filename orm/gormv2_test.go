@@ -6,7 +6,9 @@ package orm
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"strconv"
 	"testing"
 
 	"gorm.io/gorm"
@@ -16,7 +18,23 @@ type User struct {
 	gorm.Model
 	ParentId uint
 	Name     string
+	DeptID   uint
 	Children []User `json:"children,omitempty" gorm:"foreignKey:ParentId;"` // 这里注意，如果设置ParentId为0，要禁用外键约束
+}
+
+var gUserTabs = 6
+
+func (o User) TableName() string {
+	l := len(strconv.Itoa(gUserTabs - 1))
+	return fmt.Sprintf("t_user_%0*d", l, o.DeptID%uint(gUserTabs))
+}
+
+func (User) TableNameOf(id uint) string {
+	return User{DeptID: id}.TableName()
+}
+
+func (User) TableCount() uint {
+	return uint(gUserTabs)
 }
 
 type Dog struct {
@@ -47,6 +65,33 @@ func TestOrm(t *testing.T) {
 	DbCreate(&user)
 	var o User
 	gOrmDb.Model(&User{}).Where("id = ?", 1).Preload("Children").First(&o)
+	log.Println(o)
+}
+
+func TestXTablers(t *testing.T) {
+	CreateTables(&User{})
+	user := []User{{
+		Name:     "test",
+		ParentId: 0,
+		DeptID:   1,
+	}, {
+		Name:     "test",
+		ParentId: 0,
+		DeptID:   1,
+	},
+	}
+	// 批量插入， 需要人为保证数据中的数据在同一张表中
+	gOrmDb.Table(user[0].TableName()).Create(&gOrmDb)
+	lUser := user[0]
+	// 单个插入
+	gOrmDb.Table(lUser.TableName()).Create(&lUser)
+	// 查询
+	var o User
+	gOrmDb.Table(lUser.TableName()).First(&o)
+	//
+	var data []User
+	gOrmDb.Table(o.TableName()).Find(&data)
+
 	log.Println(o)
 }
 

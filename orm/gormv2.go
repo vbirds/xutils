@@ -210,6 +210,30 @@ func DbByWhere(m interface{}, w *DbWhere) *dbByWhere {
 	return o
 }
 
+func DbTableByWhere(table string, w *DbWhere) *dbByWhere {
+	db := gOrmDb.Table(table)
+	if w != nil {
+		for _, wo := range w.Wheres {
+			if wo.Where != "" {
+				db = db.Where(wo.Where, wo.Value...)
+			}
+		}
+		if len(w.Orders) > 0 {
+			for _, order := range w.Orders {
+				db = db.Order(order)
+			}
+		}
+	}
+	o := &dbByWhere{db: db}
+	if db.Count(&o.total).Error == nil {
+		// dbByWhere 分页
+		if w.Page != nil && w.Page.Num > 0 {
+			o.db = db.Offset((w.Page.Num - 1) * w.Page.Size).Limit(w.Page.Size)
+		}
+	}
+	return o
+}
+
 // DbPageRawScan obj必须是数组类型
 func DbPageRawScan(query string, obj interface{}, page, size int) (int64, error) {
 	s := reflect.ValueOf(obj)
