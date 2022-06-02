@@ -39,7 +39,7 @@ func (p *DbWhere) Like(field, v string) {
 	if v == "" {
 		return
 	}
-	p.Append(field+" like ?", v)
+	p.Append("INSTR("+field+", ?)>0", v)
 }
 
 // Equal

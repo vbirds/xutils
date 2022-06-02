@@ -44,12 +44,12 @@ func CreateTables(v interface{}) {
 	if !ok {
 		panic(fmt.Errorf("%v TypeOf not XTablers", reflect.TypeOf(v)))
 	}
-	gOrmDb.AutoMigrate(v)
+	_db.AutoMigrate(v)
 	var i uint = 1
 	for ; i < s.TableCount(); i++ {
 		tablename := s.TableNameOf(i)
-		if ok := gOrmDb.Migrator().HasTable(tablename); !ok {
-			gOrmDb.Exec(fmt.Sprintf("CREATE TABLE %s LIKE %s;", tablename, s.TableName()))
+		if ok := _db.Migrator().HasTable(tablename); !ok {
+			_db.Exec(fmt.Sprintf("CREATE TABLE %s LIKE %s;", tablename, s.TableName()))
 		}
 	}
 }

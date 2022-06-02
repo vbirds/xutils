@@ -5,30 +5,35 @@
 package orm
 
 import (
+	"errors"
 	"reflect"
 
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
-var gOrmDb *gorm.DB
+var _db *gorm.DB
 
 // H 多列处理
 type H map[string]interface{}
 
 // SetDB gorm对象
 func SetDB(db *gorm.DB) {
-	gOrmDb = db
+	_db = db
 }
 
 // SetDB gorm对象
 func DB() *gorm.DB {
-	return gOrmDb
+	return _db
 }
 
 // DbCount 数目
 func DbCount(model, where interface{}) int64 {
 	var count int64
-	db := gOrmDb.Model(model)
+	db := _db.Model(model)
 	if where != nil {
 		db = db.Where(where)
 	}
@@ -38,74 +43,74 @@ func DbCount(model, where interface{}) int64 {
 
 // DbCreate 创建
 func DbCreate(model interface{}) error {
-	return gOrmDb.Create(model).Error
+	return _db.Create(model).Error
 }
 
 // DbSave 保存
 func DbSave(value interface{}) error {
-	return gOrmDb.Save(value).Error
+	return _db.Save(value).Error
 }
 
 // DbUpdateModel 更新
 func DbUpdateModel(model interface{}) error {
-	return gOrmDb.Model(model).Updates(model).Error
+	return _db.Model(model).Updates(model).Error
 }
 
 // DbUpdateModelBy 条件更新
 func DbUpdateModelBy(model interface{}, where string, args ...interface{}) error {
-	return gOrmDb.Where(where, args...).Updates(model).Error
+	return _db.Where(where, args...).Updates(model).Error
 }
 
 // DbUpdatesById 更新
 func DbUpdateById(model, id interface{}) error {
-	return gOrmDb.Where("id = ?", id).Updates(model).Error
+	return _db.Where("id = ?", id).Updates(model).Error
 }
 
 // DbUpdateColById 单列更新
 func DbUpdateColById(model, id interface{}, column string, value interface{}) error {
-	return gOrmDb.Model(model).Where("id = ?", id).Update(column, value).Error
+	return _db.Model(model).Where("id = ?", id).Update(column, value).Error
 }
 
 func DbUpdateColBy(model interface{}, column string, value interface{}, where string, args ...interface{}) error {
-	return gOrmDb.Model(model).Where(where, args...).Update(column, value).Error
+	return _db.Model(model).Where(where, args...).Update(column, value).Error
 }
 
 // DbUpdateColsBy 更新多列
 // 用于0不更新
 func DbUpdateColsBy(model interface{}, value map[string]interface{}, where string, args ...interface{}) error {
-	return gOrmDb.Model(model).Where(where, args...).Updates(value).Error
+	return _db.Model(model).Where(where, args...).Updates(value).Error
 }
 
 // 自定义字段，用于0不更新
 func DbUpdates(model interface{}, cols ...string) error {
-	return gOrmDb.Model(model).Select(cols).Updates(model).Error
+	return _db.Model(model).Select(cols).Updates(model).Error
 }
 
 // 自定义字段，用于0不更新
 func DbUpdatesBy(model interface{}, cols []string, where string, args ...interface{}) error {
-	return gOrmDb.Model(model).Select(cols).Where(where, args...).Updates(model).Error
+	return _db.Model(model).Select(cols).Where(where, args...).Updates(model).Error
 }
 
 // DbUpdateByIds 批量更新
 // ids id数组
 func DbUpdateByIds(model interface{}, ids []int, value map[string]interface{}) error {
-	return gOrmDb.Model(model).Where("id in (?)", ids).Updates(value).Error
+	return _db.Model(model).Where("id in (?)", ids).Updates(value).Error
 }
 
 // DbDeletes 批量删除
 func DbDeletes(value interface{}) error {
-	return gOrmDb.Delete(value).Error
+	return _db.Delete(value).Error
 }
 
 // DbDeleteByIds 批量删除
 // ids id数组 []
 func DbDeleteByIds(model, ids interface{}) error {
-	return gOrmDb.Delete(model, ids).Error
+	return _db.Delete(model, ids).Error
 }
 
 // DbDeleteBy 删除
 func DbDeleteBy(model interface{}, where string, args ...interface{}) (count int64, err error) {
-	db := gOrmDb.Where(where, args...).Delete(model)
+	db := _db.Where(where, args...).Delete(model)
 	err = db.Error
 	if err != nil {
 		return
@@ -116,23 +121,23 @@ func DbDeleteBy(model interface{}, where string, args ...interface{}) (count int
 
 // DbFirstBy 指定条件查找
 func DbFirstBy(out interface{}, where string, args ...interface{}) (err error) {
-	err = gOrmDb.Where(where, args...).First(out).Error
+	err = _db.Where(where, args...).First(out).Error
 	return
 }
 
 // DbFirstById 查找
 func DbFirstById(out interface{}, id uint) error {
-	return gOrmDb.First(out, id).Error
+	return _db.First(out, id).Error
 }
 
 // DbFirstWhere 查找
 func DbFirstWhere(out, where interface{}) error {
-	return gOrmDb.Where(where).First(out).Error
+	return _db.Where(where).First(out).Error
 }
 
 // DbFind 多个查找
 func DbFind(out interface{}, orders ...string) error {
-	db := gOrmDb
+	db := _db
 	if len(orders) > 0 {
 		for _, order := range orders {
 			db = db.Order(order)
@@ -143,7 +148,7 @@ func DbFind(out interface{}, orders ...string) error {
 
 // DbFindBy 多个条件查找
 func DbFindBy(out interface{}, where string, args ...interface{}) (int64, error) {
-	db := gOrmDb.Where(where, args...).Find(out)
+	db := _db.Where(where, args...).Find(out)
 	return db.RowsAffected, db.Error
 }
 
@@ -187,7 +192,7 @@ func (o *dbByWhere) Joins(query string, args ...interface{}) *dbByWhere {
 
 // DbByWhere
 func DbByWhere(m interface{}, w *DbWhere) *dbByWhere {
-	db := gOrmDb.Model(m)
+	db := _db.Model(m)
 	if w != nil {
 		for _, wo := range w.Wheres {
 			if wo.Where != "" {
@@ -211,7 +216,7 @@ func DbByWhere(m interface{}, w *DbWhere) *dbByWhere {
 }
 
 func DbTableByWhere(table string, w *DbWhere) *dbByWhere {
-	db := gOrmDb.Table(table)
+	db := _db.Table(table)
 	if w != nil {
 		for _, wo := range w.Wheres {
 			if wo.Where != "" {
@@ -245,7 +250,7 @@ func DbPageRawScan(query string, obj interface{}, page, size int) (int64, error)
 	default:
 		return 0, nil
 	}
-	if err := gOrmDb.Raw(query).Scan(obj).Error; err != nil {
+	if err := _db.Raw(query).Scan(obj).Error; err != nil {
 		return 0, err
 	}
 	total := s.Len()
@@ -256,4 +261,46 @@ func DbPageRawScan(query string, obj interface{}, page, size int) (int64, error)
 	}
 	s.Set(s.Slice(start, end))
 	return int64(total), nil
+}
+
+var gconf = gorm.Config{
+	NamingStrategy: schema.NamingStrategy{
+		SingularTable: true,
+	},
+	DisableForeignKeyConstraintWhenMigrating: true, // 禁用外键约束
+}
+
+func NewGormV2(name, address string) (db *gorm.DB, err error) {
+	switch name {
+	case "mysql":
+		db, err = gorm.Open(mysql.New(mysql.Config{
+			DSN: address,
+			// DefaultStringSize:         64,    // string 类型字段的默认长度
+			DisableDatetimePrecision:  true,  // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
+			DontSupportRenameIndex:    true,  // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
+			DontSupportRenameColumn:   true,  // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
+			SkipInitializeWithVersion: false, // 根据版本自动配置
+		}), &gconf)
+	case "sqlite3":
+		db, err = gorm.Open(sqlite.Open(address), &gconf)
+	case "postgresql":
+		db, err = gorm.Open(postgres.Open(address), &gconf)
+	default:
+	}
+	if err != nil {
+		return nil, err
+	}
+	if db == nil {
+		return nil, errors.New("db invalid")
+	}
+	sqldb, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+	// SetMaxIdleCons 设置连接池中的最大闲置连接数。
+	sqldb.SetMaxIdleConns(10)
+	// SetMaxOpenCons 设置数据库的最大连接数量。
+	sqldb.SetMaxOpenConns(100)
+	_db = db
+	return db, nil
 }
