@@ -23,7 +23,7 @@ func handler(conn net.Conn, b []byte) error {
 }
 
 func TestServer(t *testing.T) {
-	s := NewServe(8088)
+	s := NewServer(8088)
 	s.ConnHandleFunc(handler)
 	s.HttpHandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, "hello world")
