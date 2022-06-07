@@ -30,6 +30,20 @@ func DB() *gorm.DB {
 	return _db
 }
 
+func Model(v interface{}) *gorm.DB {
+	if m, ok := v.(XTablers); ok {
+		return _db.Table(m.TableName())
+	}
+	return _db.Model(v)
+}
+
+func Table(v interface{}) *gorm.DB {
+	if m, ok := v.(XTablers); ok {
+		return _db.Table(m.TableName())
+	}
+	return _db
+}
+
 // DbCount 数目
 func DbCount(model, where interface{}) int64 {
 	var count int64
@@ -192,31 +206,7 @@ func (o *dbByWhere) Joins(query string, args ...interface{}) *dbByWhere {
 
 // DbByWhere
 func DbByWhere(m interface{}, w *DbWhere) *dbByWhere {
-	db := _db.Model(m)
-	if w != nil {
-		for _, wo := range w.Wheres {
-			if wo.Where != "" {
-				db = db.Where(wo.Where, wo.Value...)
-			}
-		}
-		if len(w.Orders) > 0 {
-			for _, order := range w.Orders {
-				db = db.Order(order)
-			}
-		}
-	}
-	o := &dbByWhere{db: db}
-	if db.Count(&o.total).Error == nil {
-		// dbByWhere 分页
-		if w.Page != nil && w.Page.Num > 0 {
-			o.db = db.Offset((w.Page.Num - 1) * w.Page.Size).Limit(w.Page.Size)
-		}
-	}
-	return o
-}
-
-func DbTableByWhere(table string, w *DbWhere) *dbByWhere {
-	db := _db.Table(table)
+	db := Model(m)
 	if w != nil {
 		for _, wo := range w.Wheres {
 			if wo.Where != "" {
