@@ -108,5 +108,5 @@ func NewServer(port uint16) *Server {
 		fmt.Println("Listener create error: ", err)
 		return nil
 	}
-	return &Serve{addr: tcpAddr, httpMux: http.NewServeMux()}
+	return &Server{addr: tcpAddr, httpMux: http.NewServeMux()}
 }
