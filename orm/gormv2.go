@@ -166,91 +166,24 @@ func DbFindBy(out interface{}, where string, args ...interface{}) (int64, error)
 	return db.RowsAffected, db.Error
 }
 
-type dbByWhere struct {
-	db    *gorm.DB
-	total int64
-}
-
-func (o *dbByWhere) Find(out interface{}, conds ...interface{}) (int64, error) {
-	if o.total < 1 {
-		return 0, nil
-	}
-	return o.total, o.db.Find(out, conds...).Error
-}
-
-func (o *dbByWhere) Scan(out interface{}) (int64, error) {
-	if o.total < 1 {
-		return 0, nil
-	}
-	return o.total, o.db.Scan(out).Error
-}
-
-// Preload 关联加载
-func (o *dbByWhere) Preload(preloads ...string) *dbByWhere {
-	if o.total < 1 {
-		return o
-	}
-	if len(preloads) > 0 {
-		for _, preload := range preloads {
-			o.db = o.db.Preload(preload)
-		}
-	}
-	return o
-}
-
-// Joins join
-func (o *dbByWhere) Joins(query string, args ...interface{}) *dbByWhere {
-	o.db = o.db.Joins(query, args...)
-	return o
-}
-
-// DbByWhere
-func DbByWhere(m interface{}, w *DbWhere) *dbByWhere {
-	db := Model(m)
-	if w != nil {
-		for _, wo := range w.Wheres {
-			if wo.Where != "" {
-				db = db.Where(wo.Where, wo.Value...)
-			}
-		}
-		if len(w.Orders) > 0 {
-			for _, order := range w.Orders {
-				db = db.Order(order)
-			}
-		}
-	}
-	o := &dbByWhere{db: db}
-	if db.Count(&o.total).Error == nil {
-		// dbByWhere 分页
-		if w.Page != nil && w.Page.Num > 0 {
-			o.db = db.Offset((w.Page.Num - 1) * w.Page.Size).Limit(w.Page.Size)
-		}
-	}
-	return o
-}
-
-// DbPageRawScan obj必须是数组类型
-func DbPageRawScan(query string, obj interface{}, page, size int) (int64, error) {
+// DbFindPageRaw obj必须是数组类型
+func DbFindPage(query string, obj interface{}, page, size int) (int64, error) {
 	s := reflect.ValueOf(obj)
 	if s.Kind() == reflect.Ptr {
 		s = s.Elem()
 	}
-	switch s.Kind() {
-	case reflect.Slice, reflect.Array:
-	default:
+	if s.Kind() != reflect.Slice {
 		return 0, nil
 	}
-	if err := _db.Raw(query).Scan(obj).Error; err != nil {
+	db := _db.Raw(query)
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
 		return 0, err
 	}
-	total := s.Len()
-	start := size * (page - 1)
-	end := start + size
-	if end >= total {
-		end = total
+	if page > 0 {
+		db = db.Offset((page - 1) * size).Limit(size)
 	}
-	s.Set(s.Slice(start, end))
-	return int64(total), nil
+	return total, db.Scan(obj).Error
 }
 
 var gconf = gorm.Config{
