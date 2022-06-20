@@ -71,6 +71,14 @@ func (o *DbWhere) Like(field, v string) *DbWhere {
 }
 
 // DateRange
+func (o *DbWhere) TimeRange(field string, st, et string) *DbWhere {
+	if st != "" && et != "" {
+		o.Where(field+" BETWEEN ? AND ?", st, et)
+	}
+	return o
+}
+
+// DateRange
 func (o *DbWhere) DateRange(field string, r []string) *DbWhere {
 	if r != nil {
 		o.Where(field+" BETWEEN ? AND ?", r[0]+" 00:00:00", r[1]+" 23:59:59")
@@ -113,7 +121,7 @@ func (o *DbWhere) Joins(query string, args ...interface{}) *DbWhere {
 
 // DbByWhere
 func (o *DbWhere) Model(m interface{}) *DbWhere {
-	db := _db.Model(m)
+	db := Model(m)
 	for _, v := range o.wheres {
 		db = db.Where(v.Where, v.Value...)
 	}

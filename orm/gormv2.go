@@ -41,7 +41,7 @@ func Table(v interface{}) *gorm.DB {
 	if m, ok := v.(XTablers); ok {
 		return _db.Table(m.TableName())
 	}
-	return _db
+	return _db.Model(v)
 }
 
 // DbCount 数目
