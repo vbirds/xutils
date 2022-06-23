@@ -11,6 +11,8 @@ import (
 	"errors"
 )
 
+const _headerLen = 8
+
 type Header struct {
 	Flag    uint8  //标识，固定为'H'
 	Version uint8  //版本，当前协议版本为1
@@ -20,7 +22,7 @@ type Header struct {
 
 func MsgHeader(code uint16, b []byte) []byte {
 	if b == nil {
-		b = make([]byte, 8)
+		b = make([]byte, _headerLen)
 	}
 	b[0] = 'H'
 	b[1] = 1
@@ -43,30 +45,48 @@ func MsgUnPack(b []byte) (*Header, []byte) {
 	h.Version = b[1]
 	h.Code = binary.LittleEndian.Uint16(b[2:])
 	h.Length = binary.LittleEndian.Uint32(b[4:])
-	return h, b[8:]
+	return h, b[_headerLen:]
 }
 
 type Msg struct {
-	data []byte
+	sdata  []byte
+	rdata  bytes.Buffer
+	pkglen uint32
 }
 
 func (o *Msg) Pack(code uint16, b []byte) []byte {
-	datalen := len(b) + 8
-	if cap(o.data) < datalen {
-		o.data = make([]byte, datalen+1)
+	datalen := len(b) + _headerLen + 1
+	if cap(o.sdata) < datalen {
+		o.sdata = make([]byte, datalen)
 	}
 	if b != nil {
-		copy(o.data[8:], b)
+		copy(o.sdata[_headerLen:], b)
 	}
 	if code == MsgJSON {
-		o.data[datalen] = '\x00'
-		datalen += 1
+		o.sdata[datalen-1] = '\x00'
+	} else {
+		datalen--
 	}
-	return MsgHeader(code, o.data[:datalen])
+	return MsgHeader(code, o.sdata[:datalen])
 }
 
-func (m *Msg) UnPack(b []byte) (*Header, []byte) {
-	return MsgUnPack(b)
+func (o *Msg) UnPack(b []byte) (*Header, []byte) {
+	if o.pkglen > 0 {
+		o.rdata.Next(int(o.pkglen))
+		o.pkglen = 0
+	}
+	o.rdata.Write(b)
+	rlen := o.rdata.Len()
+	if rlen < _headerLen {
+		return nil, nil
+	}
+	h, data := MsgUnPack(o.rdata.Bytes())
+	datalen := h.Length + _headerLen
+	if rlen < int(datalen) {
+		return nil, nil
+	}
+	o.pkglen = datalen
+	return h, data
 }
 
 func ShouldBindJSON(b []byte, v interface{}) error {
