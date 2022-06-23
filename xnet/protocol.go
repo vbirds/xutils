@@ -53,10 +53,14 @@ type Msg struct {
 func (o *Msg) Pack(code uint16, b []byte) []byte {
 	datalen := len(b) + 8
 	if cap(o.data) < datalen {
-		o.data = make([]byte, datalen)
+		o.data = make([]byte, datalen+1)
 	}
 	if b != nil {
 		copy(o.data[8:], b)
+	}
+	if code == MsgJSON {
+		o.data[datalen] = '\x00'
+		datalen += 1
 	}
 	return MsgHeader(code, o.data[:datalen])
 }
