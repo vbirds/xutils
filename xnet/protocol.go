@@ -27,7 +27,7 @@ func MsgHeader(code uint16, b []byte) []byte {
 	b[0] = 'H'
 	b[1] = 1
 	binary.LittleEndian.PutUint16(b[2:], code)
-	binary.LittleEndian.PutUint32(b[4:], uint32(len(b)-8))
+	binary.LittleEndian.PutUint32(b[4:], uint32(len(b)-_headerLen))
 	return b
 }
 

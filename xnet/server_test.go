@@ -6,6 +6,7 @@ package xnet
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"testing"
@@ -23,7 +24,10 @@ func handler(conn net.Conn, b []byte) error {
 }
 
 func TestServer(t *testing.T) {
-	s := NewServer(8088)
+	s, err := NewServer(8088)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	s.ConnHandleFunc(handler)
 	s.HttpHandleFunc("/", func(rw http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(rw, "hello world")

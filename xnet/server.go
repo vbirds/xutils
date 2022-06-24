@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 )
@@ -47,7 +48,6 @@ func httpRequest(buffer []byte, conn net.Conn) (*http.Request, error) {
 
 // Server
 type Server struct {
-	addr        *net.TCPAddr
 	listener    *net.TCPListener
 	httpMux     *http.ServeMux
 	connHandler func(net.Conn, []byte) error
@@ -71,19 +71,16 @@ func (s *Server) newConnection(conn net.Conn) {
 	if s.connHandler != nil {
 		err = s.connHandler(conn, data[:recvlen])
 	}
-	fmt.Printf("%s connection closed. %v\n", clientAddr, err)
+	log.Printf("%s connection closed. %v\n", clientAddr, err)
 }
 
 func (s *Server) ListenAndServe() (err error) {
-	s.listener, err = net.ListenTCP("tcp", s.addr)
-	if err != nil {
-		return err
-	}
+	log.Println("xnet server listening at:", s.listener.Addr().String())
 	defer s.listener.Close()
 	for {
 		conn, err := s.listener.Accept()
 		if err != nil {
-			fmt.Println("Accept error: ", err)
+			log.Println("Accept error: ", err)
 			return err
 		}
 		go s.newConnection(conn)
@@ -102,11 +99,12 @@ func (s *Server) ConnHandleFunc(handler func(net.Conn, []byte) error) {
 	s.connHandler = handler
 }
 
-func NewServer(port uint16) *Server {
+func NewServer(port uint16) (*Server, error) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", fmt.Sprintf(":%d", port)) //获取一个tcpAddr
 	if err != nil {
-		fmt.Println("Listener create error: ", err)
-		return nil
+		return nil, err
 	}
-	return &Server{addr: tcpAddr, httpMux: http.NewServeMux()}
+	s := &Server{httpMux: http.NewServeMux()}
+	s.listener, err = net.ListenTCP("tcp", tcpAddr)
+	return s, err
 }
