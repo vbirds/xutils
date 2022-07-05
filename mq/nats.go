@@ -49,7 +49,7 @@ func NewNats(url string) (Interface, error) {
 	return cli, nil
 }
 
-func (o *NatsCli) Run() {
+func (o *NatsCli) Run() error {
 	o.msgs = make(chan *pubMsg, 10)
 	go func() {
 		for v := range o.msgs {
@@ -62,6 +62,7 @@ func (o *NatsCli) Run() {
 			}
 		}
 	}()
+	return nil
 }
 
 // Publish publish
@@ -71,9 +72,11 @@ func (o *NatsCli) Publish(topic string, v interface{}) error {
 }
 
 // Subscribe subscribe
-func (o *NatsCli) Subscribe(topic string, handler func([]byte)) error {
+func (o *NatsCli) Subscribe(topic string, handler func([]byte) error) error {
 	_, err := o.Conn.Subscribe(topic, func(m *nats.Msg) {
-		handler(m.Data)
+		if err := handler(m.Data); err == nil {
+			m.Ack()
+		}
 	})
 	return err
 }

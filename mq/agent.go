@@ -6,13 +6,15 @@ package mq
 
 type Interface interface {
 	Publish(string, interface{}) error
-	Subscribe(string, func([]byte)) error
-	Run()
+	Subscribe(string, func([]byte) error) error
+	Run() error
 	Release()
 }
 
 type Options struct {
 	Address string
+	User    string
+	Pswd    string
 	Goc     int // goroutine 数目
 }
 
@@ -31,13 +33,13 @@ func (o *Client) goindex() int {
 }
 
 // 支持创建多goroutine发布
-func New(o *Options, handler func(string) (Interface, error)) (*Client, error) {
-	if o.Goc == 0 {
-		o.Goc = 1
+func New(opt *Options, handler func(*Options) (Interface, error)) (*Client, error) {
+	if opt.Goc == 0 {
+		opt.Goc = 1
 	}
-	c := &Client{Options: *o}
-	for i := 0; i < o.Goc; i++ {
-		cli, err := handler(o.Address)
+	c := &Client{Options: *opt}
+	for i := 0; i < opt.Goc; i++ {
+		cli, err := handler(opt)
 		if err != nil {
 			return c, err
 		}
@@ -46,7 +48,7 @@ func New(o *Options, handler func(string) (Interface, error)) (*Client, error) {
 	return c, nil
 }
 
-func NewPublish(o *Options, handler func(string) (Interface, error)) (*Client, error) {
+func NewPublish(o *Options, handler func(*Options) (Interface, error)) (*Client, error) {
 	c, err := New(o, handler)
 	if err != nil {
 		c.Shutdown()
@@ -67,8 +69,8 @@ func (o *Client) Shutdown() {
 }
 
 // 订阅会自动分配connection对象
-// 订阅数大于连接数，出现同意连接多次订阅，报错
-func (o *Client) Subscribe(subject string, goc int, handler func([]byte)) error {
+// 订阅数大于连接数，出现同一连接多次订阅，报错
+func (o *Client) Subscribe(subject string, handler func([]byte) error) error {
 	i := o.goindex()
 	return o.clients[i].Subscribe(subject, handler)
 }
