@@ -21,14 +21,14 @@ type pubMsg struct {
 }
 
 type NatsCli struct {
-	url  string
 	Conn *nats.Conn
 	msgs chan *pubMsg
+	*Options
 }
 
 func (o *NatsCli) isConnected() error {
 	if o.Conn == nil || o.Conn.IsClosed() {
-		c, err := nats.Connect(o.url)
+		c, err := nats.Connect(o.Address)
 		if err != nil {
 			return err
 		}
@@ -38,14 +38,13 @@ func (o *NatsCli) isConnected() error {
 }
 
 // NewNats nats connect
-func NewNats(url string) (Interface, error) {
-	cli := &NatsCli{}
-	cli.url = url
-	nc, err := nats.Connect(url)
+func NewNats(opt *Options) (Interface, error) {
+	cli := &NatsCli{Options: opt}
+	conn, err := nats.Connect(opt.Address)
 	if err != nil {
 		return cli, err
 	}
-	cli.Conn = nc
+	cli.Conn = conn
 	return cli, nil
 }
 

@@ -34,6 +34,7 @@ func TestStomp(t *testing.T) {
 	c, err := NewPublish(&Options{Address: "127.0.0.1:35002", Goc: 1}, NewStomp)
 	if err != nil {
 		c.Shutdown()
+		log.Fatalln(err)
 	}
 	subject := "/queue/test/stomp"
 	c.Subscribe(subject, func(b []byte) error {
@@ -54,9 +55,10 @@ func TestStomp(t *testing.T) {
 }
 
 func TestNats(t *testing.T) {
-	c, err := NewPublish(&Options{Address: NatsURL, Goc: 1}, NewStomp)
+	c, err := NewPublish(&Options{Address: NatsURL, Goc: 1}, NewNats)
 	if err != nil {
 		c.Shutdown()
+		log.Fatalln(err)
 	}
 	subject := "/queue/test/nats"
 	c.Subscribe(subject, func(b []byte) error {
