@@ -78,6 +78,6 @@ func (o *dbPart) AlterRange(primaryKey string, days int) {
 	}
 }
 
-func NewPartiton(table string) *dbPart {
+func NewPartition(table string) *dbPart {
 	return &dbPart{Table: table}
 }
